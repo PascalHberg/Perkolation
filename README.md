@@ -2,6 +2,8 @@
 
 ![Grid Demo](demo.png)
 
+**Live Demo:** [PascalHberg.github.io/Perkolation](https://PascalHberg.github.io/Perkolation)
+
 Dieses Projekt ist eine einfache Python-Tkinter-Anwendung zur Visualisierung eines Grids mit zufälliger Initialisierung über eine prozentuale Dichte.
 
 Der Benutzer kann die Dichte zwischen 1.00 und 100.00 einstellen, auch mit Dezimalstellen oder Komma-Eingabe. Die Eingabe wird intern normalisiert.
