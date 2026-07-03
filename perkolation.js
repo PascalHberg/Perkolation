@@ -48,11 +48,14 @@ class PercolationGrid {
     }
 
     // Apply random density to grid
+    // Konvertiert Prozentwert korrekt zu Dezimal und wendet auf alle Zellen an
     applyDensity(density) {
+        // Dichte als Dezimalzahl (0.0 - 1.0)
         const d = density / 100.0;
         
         for (let y = 0; y < GRID_H; y++) {
             for (let x = 0; x < GRID_W; x++) {
+                // Zufallswert mit der Dichte vergleichen
                 const state = Math.random() < d ? STATE_BLACK : STATE_WHITE;
                 this.grid[y][x] = state;
                 this.colors[`${x},${y}`] = state === STATE_BLACK ? 'black' : 'white';
@@ -129,6 +132,7 @@ class PercolationGrid {
     }
 
     // Flood fill algorithm für schwarze Felder (4er-Nachbarschaft)
+    // Verwendet Stack-basierter Ansatz für effiziente Ausführung
     floodFillBlack(startX, startY) {
         const stack = [[startX, startY]];
         const visited = new Set();
@@ -160,6 +164,7 @@ class PercolationGrid {
     }
 
     // Flood fill algorithm für freie Felder (4er-Nachbarschaft)
+    // Identische Logik wie floodFillBlack, aber für weiße Felder
     floodFillFree(startX, startY) {
         const stack = [[startX, startY]];
         const visited = new Set();
@@ -191,6 +196,7 @@ class PercolationGrid {
     }
 
     // Reset colors while keeping grid state
+    // Konvertiert rot -> schwarz und blau -> weiß
     resetColors() {
         for (let y = 0; y < GRID_H; y++) {
             for (let x = 0; x < GRID_W; x++) {
@@ -214,6 +220,7 @@ class PercolationGrid {
     }
 
     // Update statistics display
+    // Zählt alle Zelltypen und aktualisiert die HTML-Elemente
     updateStats() {
         let totalCells = 0;
         let blackCells = 0;
@@ -232,14 +239,13 @@ class PercolationGrid {
             }
         }
         
+        // Berechne aktuelle Dichte basierend auf schwarzen + roten Feldern
         const occupiedCount = blackCells + redCells;
         const currentDensity = ((occupiedCount / (GRID_W * GRID_H)) * 100).toFixed(2);
         
         // Statistiken aktualisieren
         document.getElementById('gridSize').textContent = `${GRID_W}×${GRID_H}`;
         document.getElementById('totalCells').textContent = totalCells.toString();
-        document.getElementById('occupiedCells').textContent = occupiedCount.toString();
-        document.getElementById('currentDensity').textContent = `${currentDensity}%`;
         document.getElementById('blackCells').textContent = blackCells.toString();
         document.getElementById('whiteCells').textContent = whiteCells.toString();
         document.getElementById('redCells').textContent = redCells.toString();
@@ -254,6 +260,7 @@ class PercolationGrid {
 }
 
 // Update button style when mode changes
+// Zeigt visuell an, ob der Modus aktiv ist
 function updateMarkFreeButtonStyle() {
     const btn = document.getElementById('markFreeBtn');
     if (percolation.freeAreaMode) {
@@ -279,6 +286,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const markFreeBtn = document.getElementById('markFreeBtn');
     
     // Slider change - apply density immediately
+    // Bei Schieben des Sliders wird sofort ein neues Gitter mit der neuen Dichte generiert
     slider.addEventListener('input', (e) => {
         const value = parseFloat(e.target.value);
         input.value = value.toFixed(2);
@@ -290,6 +298,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     
     // Input change - apply density immediately
+    // Bei Eingabe eines Wertes wird sofort das Gitter aktualisiert
     input.addEventListener('change', (e) => {
         let value = parseFloat(e.target.value);
         
@@ -307,6 +316,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     
     // Apply button - regenerate grid (legacy, still works)
+    // Legacy Button, aber funktioniert weiterhin als Fallback
     applyBtn.addEventListener('click', () => {
         const density = parseFloat(slider.value);
         percolation.initGrid();
@@ -315,11 +325,13 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     
     // Reset button - reset colors only
+    // Setzt Markierungen zurück, ohne die Gitter-Struktur zu verändern
     resetBtn.addEventListener('click', () => {
         percolation.resetColors();
     });
     
     // Mark Free Area button
+    // Aktiviert den Modus zum Markieren freier Bereiche
     markFreeBtn.addEventListener('click', () => {
         percolation.activateFreeAreaMode();
     });
