@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perkolation - Marco-Polo Schwelle</title>
+    <title>Perkolation - Grid Flood Fill Visualizer</title>
     <style>
         * {
             margin: 0;
@@ -12,243 +12,313 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
 
         .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
-            max-width: 900px;
-            width: 100%;
+            overflow: hidden;
         }
 
-        h1 {
+        /* LINKER BEREICH - Info und Controls */
+        .left-panel {
+            width: 320px;
+            padding: 30px;
+            background: #f8f9fa;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .left-panel h2 {
+            font-size: 18px;
             color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .info-box {
-            background: #f0f4ff;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin-bottom: 25px;
-            border-radius: 4px;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #333;
-        }
-
-        .info-box strong {
-            color: #667eea;
-        }
-
-        .controls {
-            background: #f9f9f9;
-            padding: 25px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .control-group {
             margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
         }
 
-        .control-group:last-child {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .input-row {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        input[type="range"],
-        input[type="number"] {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        input[type="range"] {
-            flex: 1;
-            min-width: 200px;
-            cursor: pointer;
-        }
-
-        input[type="number"] {
-            width: 120px;
-            text-align: center;
-        }
-
-        .value-display {
-            background: #667eea;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 14px;
-            min-width: 140px;
-            text-align: center;
-        }
-
-        .grid-wrapper {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 25px;
-        }
-
-        canvas {
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            background: white;
-            cursor: crosshair;
-            display: block;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-reset {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-reset:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-apply {
-            background: #764ba2;
-            color: white;
-        }
-
-        .btn-apply:hover {
-            background: #6a3f92;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.4);
-        }
-
-        .stats {
-            background: #f0f4ff;
-            padding: 20px;
-            border-radius: 8px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+        /* Statistikbereich */
+        .stats-section {
             margin-bottom: 25px;
         }
 
         .stat-item {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
         }
 
         .stat-label {
-            color: #666;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
         }
 
         .stat-value {
+            font-weight: 700;
             color: #667eea;
-            font-size: 24px;
-            font-weight: bold;
+            font-family: 'Courier New', monospace;
         }
 
-        .footer {
-            border-top: 1px solid #e0e0e0;
-            padding-top: 20px;
-            margin-top: 30px;
+        /* Dichte-Regler */
+        .density-section {
+            margin-bottom: 25px;
+        }
+
+        .density-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .density-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .density-slider {
+            flex: 1;
+            height: 6px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background: #e0e0e0;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .density-slider::-webkit-slider-thumb {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #667eea;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+            transition: background 0.2s;
+        }
+
+        .density-slider::-webkit-slider-thumb:hover {
+            background: #764ba2;
+        }
+
+        .density-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #667eea;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+            transition: background 0.2s;
+        }
+
+        .density-slider::-moz-range-thumb:hover {
+            background: #764ba2;
+        }
+
+        .density-input {
+            width: 70px;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .density-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .density-display {
             font-size: 12px;
             color: #999;
-            text-align: center;
-            line-height: 1.8;
+            margin-bottom: 10px;
+            text-align: right;
         }
 
-        .footer a {
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        .legend {
+        /* Buttons */
+        .button-group {
             display: flex;
-            gap: 30px;
-            justify-content: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            font-size: 13px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 8px;
+            margin-bottom: 25px;
         }
 
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 2px;
-            border: 1px solid #ccc;
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        @media (max-width: 768px) {
+        .btn-apply {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-apply:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-apply:active {
+            transform: translateY(0);
+        }
+
+        .btn-reset {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-reset:active {
+            transform: translateY(0);
+        }
+
+        .btn-mark-free {
+            background: #4169e1;
+            color: white;
+        }
+
+        .btn-mark-free:hover {
+            background: #3d5ecf;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(65, 105, 225, 0.4);
+        }
+
+        .btn-mark-free:active {
+            transform: translateY(0);
+        }
+
+        .btn-mark-free.active-mode {
+            background: #2d4ab8;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 12px rgba(65, 105, 225, 0.6);
+        }
+
+        /* Info-Box */
+        .info-section {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-section h3 {
+            font-size: 12px;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-section p {
+            font-size: 12px;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .info-section strong {
+            color: #333;
+            display: block;
+            margin-top: 8px;
+        }
+
+        /* RECHTER BEREICH - Canvas */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            background: white;
+        }
+
+        #canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.2s;
+        }
+
+        #canvas:hover {
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
             .container {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .right-panel {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                border-radius: 8px;
+            }
+
+            .left-panel {
+                width: 100%;
                 padding: 20px;
             }
 
-            h1 {
-                font-size: 22px;
+            .right-panel {
+                padding: 15px;
             }
 
-            canvas {
+            .left-panel h2 {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+            #canvas {
                 max-width: 100%;
                 height: auto;
             }
@@ -257,73 +327,94 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔗 Perkolationsphänomen</h1>
-        <p class="subtitle">Marco-Polo Schwelle (59.2746050792%) auf zweidimensionalem Gitter</p>
-
-        <div class="info-box">
-            <strong>Marco-Polo Schwelle:</strong> Der kritische Dichtewert bei ca. 59.27%, bei dem eine Perkolation durch das Gitter zu entstehen beginnt. Klicken Sie auf schwarze Zellen, um zusammenhängende Regionen hervorzuheben.
-        </div>
-
-        <div class="controls">
-            <div class="control-group">
-                <label>Gitterdichte (%)</label>
-                <div class="input-row">
-                    <input type="range" id="densitySlider" min="1" max="100" step="0.01" value="59.2746050792">
-                    <input type="number" id="densityInput" min="1" max="100" step="0.01" value="59.2746050792">
-                    <div class="value-display" id="densityDisplay">59.27%</div>
+        <!-- LINKER BEREICH: Info und Controls -->
+        <div class="left-panel">
+            <!-- Statistikbereich -->
+            <h2>📊 Statistiken</h2>
+            <div class="stats-section">
+                <div class="stat-item">
+                    <span class="stat-label">Gittergröße:</span>
+                    <span class="stat-value" id="gridSize">25×25</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Gesamtfelder:</span>
+                    <span class="stat-value" id="totalCells">625</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Schwarze Felder:</span>
+                    <span class="stat-value" id="blackCells">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Weiße Felder:</span>
+                    <span class="stat-value" id="whiteCells">625</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Rote Felder:</span>
+                    <span class="stat-value" id="redCells">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Blaue Felder:</span>
+                    <span class="stat-value" id="blueCells">0</span>
                 </div>
             </div>
+
+            <!-- Dichte-Regler -->
+            <h2>🎚️ Dichte-Regler</h2>
+            <div class="density-section">
+                <label class="density-label">Schwarz-Anteil (1% - 100%)</label>
+                <div class="density-display">
+                    <span id="densityDisplay">59.27%</span>
+                </div>
+                <div class="density-controls">
+                    <input 
+                        type="range" 
+                        id="densitySlider" 
+                        class="density-slider" 
+                        min="1.00" 
+                        max="100.00" 
+                        step="0.01" 
+                        value="59.27"
+                    >
+                    <input 
+                        type="number" 
+                        id="densityInput" 
+                        class="density-input" 
+                        min="1.00" 
+                        max="100.00" 
+                        step="0.01" 
+                        value="59.27"
+                    >
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="button-group">
+                <button id="applyBtn" class="btn-apply">Neue Gitter generieren</button>
+                <button id="resetBtn" class="btn-reset">Reset (Markierungen löschen)</button>
+                <button id="markFreeBtn" class="btn-mark-free">Freie Bereiche markieren</button>
+            </div>
+
+            <!-- Info -->
+            <div class="info-section">
+                <h3>ℹ️ Anleitung</h3>
+                <p>
+                    <strong>Schwarze Felder:</strong><br>
+                    Klicke auf ein schwarzes Feld, um alle zusammenhängenden schwarzen Felder rot zu färben.
+                </p>
+                <p style="margin-top: 12px;">
+                    <strong>Weiße Felder:</strong><br>
+                    Klicke zuerst auf „Freie Bereiche markieren", dann auf ein weißes Feld, um alle zusammenhängenden weißen Felder blau zu färben.
+                </p>
+                <p style="margin-top: 12px;">
+                    <strong>Dichte:</strong><br>
+                    Schiebe den Regler oder gib einen Wert ein für eine neue Gitter-Generierung.
+                </p>
+            </div>
         </div>
 
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-color" style="background: white;"></div>
-                <span>Leer</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: black;"></div>
-                <span>Besetzt</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #ff6b6b;"></div>
-                <span>Perkolierende Region</span>
-            </div>
-        </div>
-
-        <div class="grid-wrapper">
+        <!-- RECHTER BEREICH: Canvas -->
+        <div class="right-panel">
             <canvas id="canvas"></canvas>
-        </div>
-
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-label">Gittergröße</div>
-                <div class="stat-value" id="gridSize">25×25</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Gesamtzellen</div>
-                <div class="stat-value" id="totalCells">625</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Besetzte Zellen</div>
-                <div class="stat-value" id="occupiedCells">371</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">Aktuelle Dichte</div>
-                <div class="stat-value" id="currentDensity">59.36%</div>
-            </div>
-        </div>
-
-        <div class="button-group">
-            <button class="btn-apply" id="applyBtn">Neue Perkolation</button>
-            <button class="btn-reset" id="resetBtn">Farben zurücksetzen</button>
-        </div>
-
-        <div class="footer">
-            <p><strong>Projekt:</strong> Perkolationsphänomen auf zweidimensionalen Gittern</p>
-            <p style="margin-top: 10px;">👤 <strong>Entwickler:</strong> <a href="https://github.com/PascalHberg" target="_blank">Pascal Hässenberg</a></p>
-            <p style="margin-top: 8px;">🔗 <strong>GitHub:</strong> <a href="https://github.com/PascalHberg/Perkolation" target="_blank">github.com/PascalHberg/Perkolation</a></p>
-            <p style="margin-top: 8px;">💼 <strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/pascal-ha%C3%9Fenberg-523480332/" target="_blank">Pascal Hässenberg</a></p>
-            <p style="margin-top: 12px; font-size: 11px; color: #bbb;">© 2026 | Lizenz: MIT</p>
         </div>
     </div>
 
